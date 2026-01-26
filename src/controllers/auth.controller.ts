@@ -381,9 +381,12 @@ export const resetPassword = async (req: Request, res: Response) => {
         .string({
           error: "Please confirm your password before continuing.",
         })
-        .min(8, { error: "Password should be at least 8 characters long." })
+        .min(8, {
+          error: "Confirm Password should be at least 8 characters long.",
+        })
         .max(100, {
-          error: "Password should not be more than 100 characters long.",
+          error:
+            "Confirm Password should not be more than 100 characters long.",
         }),
     });
 
@@ -442,6 +445,12 @@ export const resetPassword = async (req: Request, res: Response) => {
       },
     });
 
+    await prisma.refreshToken.deleteMany({
+      where: {
+        userId: user.id,
+      },
+    });
+
     await prisma.resetPasswordToken.delete({
       where: {
         token: token,
@@ -450,7 +459,7 @@ export const resetPassword = async (req: Request, res: Response) => {
 
     const response: ApiResponse<null> = {
       data: null,
-      message: "Password reset successful",
+      message: "Password reset successful. Please login again",
       success: true,
     };
     res.status(200).json(response);
