@@ -5,6 +5,7 @@ import {
   logout,
   refreshToken,
   registerUser,
+  resetPasswordLink,
 } from "../controllers/auth.controller";
 import { verifyJwt } from "../middlewares/auth.middleware";
 
@@ -15,5 +16,6 @@ authRouter.post("/login", loginUser);
 authRouter.get("/refresh-token", refreshToken);
 authRouter.get("/me", verifyJwt, getUserDetails);
 authRouter.get("/logout", logout);
+authRouter.post("/forgot-password", resetPasswordLink);
 
 export { authRouter };

@@ -3,11 +3,14 @@ import { ApiResponse } from "../schemas/common.response";
 import {
   loginValidation,
   registerValidationSchema,
+  resetPasswordValidation,
 } from "../validations/auth.validation";
 import bcrypt from "bcrypt";
 import { prisma } from "../lib/prisma";
 import jwt from "jsonwebtoken";
 import { LoginResponse } from "../schemas/auth.schema";
+import crypto from "crypto";
+import { sendResetPasswordLink } from "../lib/email";
 
 export const registerUser = async (req: Request, res: Response) => {
   const parsedBody = registerValidationSchema.safeParse(req.body);
@@ -114,7 +117,7 @@ export const loginUser = async (req: Request, res: Response) => {
         id: user.id,
       },
       process.env.JWT_ACCESS_SECRET!,
-      { expiresIn: "15m" },
+      { expiresIn: "1m" },
     );
 
     const refreshToken = jwt.sign(
@@ -213,7 +216,7 @@ export const refreshToken = async (req: Request, res: Response) => {
         id: decoded.id,
       },
       process.env.JWT_ACCESS_SECRET!,
-      { expiresIn: "15m" },
+      { expiresIn: "1m" },
     );
 
     const response: ApiResponse<LoginResponse> = {
@@ -274,5 +277,61 @@ export const logout = async (req: Request, res: Response) => {
     };
 
     return res.status(200).json(response);
+  }
+};
+
+export const resetPasswordLink = async (req: Request, res: Response) => {
+  const parsedBody = resetPasswordValidation.safeParse(req.body);
+
+  if (!parsedBody.success) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Invalid data format.",
+      success: false,
+      error: { message: parsedBody.error.issues[0].message },
+    };
+
+    return res.status(400).json(response);
+  }
+
+  const { email } = parsedBody.data;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (user) {
+      const token = crypto.randomBytes(32).toString("hex");
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      await prisma.resetPasswordToken.create({
+        data: {
+          expiresAt,
+          token,
+          userId: user?.id,
+        },
+      });
+
+      await sendResetPasswordLink(email, token);
+    }
+
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Password reset link sent to your registered email.",
+      success: true,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Login failed",
+      success: false,
+      error: { message: "Internal server error." },
+    };
+    return res.status(500).json(response);
   }
 };

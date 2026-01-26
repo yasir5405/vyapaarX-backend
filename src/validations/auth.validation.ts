@@ -20,4 +20,8 @@ const loginValidation = z.object({
     .max(100, { error: "Password cannot be more than 100 characters long." }),
 });
 
-export { registerValidationSchema, loginValidation };
+const resetPasswordValidation = z.object({
+  email: z.email({ error: "Please enter a email." }),
+});
+
+export { registerValidationSchema, loginValidation, resetPasswordValidation };
