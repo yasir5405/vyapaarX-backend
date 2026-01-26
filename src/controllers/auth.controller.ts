@@ -245,3 +245,34 @@ export const getUserDetails = async (req: Request, res: Response) => {
 
   res.status(200).json(response);
 };
+
+export const logout = async (req: Request, res: Response) => {
+  const { refreshToken } = req.cookies;
+
+  if (refreshToken) {
+    await prisma.refreshToken.update({
+      where: {
+        token: refreshToken,
+      },
+      data: {
+        revoked: true,
+      },
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
+    });
+
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Logged out successfully.",
+      success: true,
+    };
+
+    return res.status(200).json(response);
+  }
+};
