@@ -179,3 +179,153 @@ export const updateAddress = async (req: Request, res: Response) => {
     return res.status(500).json(response);
   }
 };
+
+export const deleteAddress = async (req: Request, res: Response) => {
+  const addressId = Number(req.params.id);
+
+  if (Number.isNaN(addressId)) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Invalid address id",
+      success: false,
+    };
+
+    return res.status(400).json(response);
+  }
+
+  try {
+    const user = req.user!;
+
+    const address = await prisma.address.findUnique({
+      where: {
+        id: addressId,
+      },
+    });
+
+    if (!address) {
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "Address not found",
+        success: false,
+      };
+
+      return res.status(404).json(response);
+    }
+
+    if (user.id !== address.userId) {
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "You are not allowed to delete this address",
+        success: false,
+      };
+
+      return res.status(403).json(response);
+    }
+
+    const deletedAddress = await prisma.address.delete({
+      where: {
+        id: addressId,
+      },
+    });
+
+    const response: ApiResponse<typeof deletedAddress> = {
+      data: deletedAddress,
+      message: "Address deleted successfully",
+      success: true,
+    };
+
+    return res.status(200).json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Error deleting address. Please try again.",
+      success: false,
+      error: {
+        message: "Internal server error",
+      },
+    };
+    return res.status(500).json(response);
+  }
+};
+
+export const setDefaultAddress = async (req: Request, res: Response) => {
+  const addressId = Number(req.params.id);
+
+  if (Number.isNaN(addressId)) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Invalid address id",
+      success: false,
+    };
+
+    return res.status(400).json(response);
+  }
+
+  try {
+    const user = req.user!;
+
+    const address = await prisma.address.findUnique({
+      where: { id: addressId },
+    });
+
+    if (!address) {
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "Address not found",
+        success: false,
+      };
+
+      return res.status(404).json(response);
+    }
+
+    if (address.userId !== user.id) {
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "You are not to modify this address",
+        success: false,
+      };
+
+      return res.status(403).json(response);
+    }
+
+    await prisma.$transaction([
+      prisma.address.updateMany({
+        where: {
+          userId: user.id,
+          isDefault: true,
+        },
+        data: {
+          isDefault: false,
+        },
+      }),
+
+      prisma.address.update({
+        where: {
+          id: addressId,
+        },
+        data: {
+          isDefault: true,
+        },
+      }),
+    ]);
+
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Default address updated successfully",
+      success: false,
+    };
+
+    return res.status(200).json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Failed to set default address",
+      success: false,
+      error: {
+        message: "Internal server error",
+      },
+    };
+
+    return res.status(500).json(response);
+  }
+};
