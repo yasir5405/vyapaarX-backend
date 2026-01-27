@@ -245,7 +245,7 @@ export const refreshToken = async (req: Request, res: Response) => {
 };
 
 export const getUserDetails = async (req: Request, res: Response) => {
-  const user = req.user;
+  const user = req.user!;
 
   const response: ApiResponse<typeof user> = {
     data: user,

@@ -24,28 +24,26 @@ export const addAddress = async (req: Request, res: Response) => {
   const { addressLine, city, country, postalCode, state } = parsedBody.data;
 
   try {
-    const user = req.user;
+    const user = req.user!;
 
-    if (user) {
-      const address = await prisma.address.create({
-        data: {
-          addressLine,
-          city,
-          country,
-          postalCode,
-          state,
-          userId: user?.id,
-        },
-      });
+    const address = await prisma.address.create({
+      data: {
+        addressLine,
+        city,
+        country,
+        postalCode,
+        state,
+        userId: user.id,
+      },
+    });
 
-      const response: ApiResponse<typeof address> = {
-        data: address,
-        message: "Address added successfully",
-        success: true,
-      };
+    const response: ApiResponse<typeof address> = {
+      data: address,
+      message: "Address added successfully",
+      success: true,
+    };
 
-      res.status(201).json(response);
-    }
+    res.status(201).json(response);
   } catch (error) {
     const response: ApiResponse<null> = {
       data: null,
@@ -61,33 +59,21 @@ export const addAddress = async (req: Request, res: Response) => {
 
 export const getAddresses = async (req: Request, res: Response) => {
   try {
-    const user = req.user;
+    const user = req.user!;
 
-    if (user) {
-      const addresses = await prisma.address.findMany({
-        where: {
-          userId: user.id,
-        },
-      });
+    const addresses = await prisma.address.findMany({
+      where: {
+        userId: user.id,
+      },
+    });
 
-      //   if (!addresses || addresses.length === 0) {
-      //     const response: ApiResponse<null> = {
-      //       data: null,
-      //       message: "No addresses added",
-      //       success: false,
-      //     };
+    const response: ApiResponse<typeof addresses> = {
+      data: addresses,
+      message: "Addresses fetched successfully",
+      success: true,
+    };
 
-      //     return res.status(404).json(response);
-      //   }
-
-      const response: ApiResponse<typeof addresses> = {
-        data: addresses,
-        message: "Addresses fetched successfully",
-        success: true,
-      };
-
-      res.status(200).json(response);
-    }
+    res.status(200).json(response);
   } catch (error) {
     const response: ApiResponse<null> = {
       data: null,
@@ -138,53 +124,49 @@ export const updateAddress = async (req: Request, res: Response) => {
     return res.status(400).json(response);
   }
 
-  const { addressLine, city, country, postalCode, state } = parsedBody.data;
-
   try {
-    const user = req.user;
+    const user = req.user!;
 
-    if (user) {
-      const address = await prisma.address.findUnique({
-        where: {
-          id: +addressId,
-        },
-      });
+    const address = await prisma.address.findUnique({
+      where: {
+        id: +addressId,
+      },
+    });
 
-      if (!address) {
-        const response: ApiResponse<null> = {
-          data: null,
-          message: "Address not found",
-          success: false,
-        };
-
-        return res.status(404).json(response);
-      }
-
-      if (address.userId !== user.id) {
-        const response: ApiResponse<null> = {
-          data: null,
-          message: "You are not allowed to update this address",
-          success: false,
-        };
-
-        return res.status(403).json(response);
-      }
-
-      await prisma.address.update({
-        where: {
-          id: addressId,
-        },
-        data: parsedBody.data,
-      });
-
+    if (!address) {
       const response: ApiResponse<null> = {
         data: null,
-        message: "Address updated successfully.",
-        success: true,
+        message: "Address not found",
+        success: false,
       };
 
-      res.status(200).json(response);
+      return res.status(404).json(response);
     }
+
+    if (address.userId !== user.id) {
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "You are not allowed to update this address",
+        success: false,
+      };
+
+      return res.status(403).json(response);
+    }
+
+    await prisma.address.update({
+      where: {
+        id: addressId,
+      },
+      data: parsedBody.data,
+    });
+
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Address updated successfully.",
+      success: true,
+    };
+
+    res.status(200).json(response);
   } catch (error) {
     const response: ApiResponse<null> = {
       data: null,
