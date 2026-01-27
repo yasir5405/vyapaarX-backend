@@ -2,12 +2,15 @@ import express from "express";
 import cors from "cors";
 import { authRouter } from "./routes/auth.route";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import { addressRouter } from "./routes/address.route";
 
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors());
+app.use(helmet());
 
 app.get("/", (req, res) => {
   res.status(200).json({
@@ -16,5 +19,6 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRouter);
+app.use("/api/addresses", addressRouter);
 
 export default app;

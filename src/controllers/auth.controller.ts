@@ -118,7 +118,7 @@ export const loginUser = async (req: Request, res: Response) => {
         id: user.id,
       },
       process.env.JWT_ACCESS_SECRET!,
-      { expiresIn: "1m" },
+      { expiresIn: "1d" },
     );
 
     const refreshToken = jwt.sign(
@@ -202,7 +202,13 @@ export const refreshToken = async (req: Request, res: Response) => {
       },
     });
 
-    if (!storedToken) {
+    if (
+      !storedToken ||
+      storedToken.revoked ||
+      storedToken.expiresAt < new Date()
+    ) {
+      res.clearCookie("refreshToken");
+
       const response: ApiResponse<null> = {
         data: null,
         message: "Invalid refresh token. Unauthorized.",
@@ -217,7 +223,7 @@ export const refreshToken = async (req: Request, res: Response) => {
         id: decoded.id,
       },
       process.env.JWT_ACCESS_SECRET!,
-      { expiresIn: "1m" },
+      { expiresIn: "1d" },
     );
 
     const response: ApiResponse<LoginResponse> = {
