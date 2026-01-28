@@ -89,3 +89,34 @@ export const addToCart = async (req: Request, res: Response) => {
     return res.status(500).json(response);
   }
 };
+
+export const getCart = async (req: Request, res: Response) => {
+  const user = req.user!;
+
+  try {
+    const cart = await prisma.cart.findUnique({
+      where: {
+        userId: user.id,
+      },
+    });
+
+    const response: ApiResponse<typeof cart> = {
+      data: cart,
+      message: "Cart fetched successfully",
+      success: true,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Error getting cart. Please try again",
+      success: false,
+      error: {
+        message: "Internal server error",
+      },
+    };
+
+    return res.status(500).json(response);
+  }
+};
