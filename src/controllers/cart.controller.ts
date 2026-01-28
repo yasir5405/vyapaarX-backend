@@ -198,6 +198,16 @@ export const updateCartItems = async (req: Request, res: Response) => {
       return res.status(404).json(response);
     }
 
+    if (user.id !== cart.userId) {
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "You not authorised to update this cart",
+        success: false,
+      };
+
+      return res.status(403).json(response);
+    }
+
     if (quantity <= 0) {
       await prisma.cartItem.delete({
         where: {
@@ -226,6 +236,134 @@ export const updateCartItems = async (req: Request, res: Response) => {
     const response: ApiResponse<null> = {
       data: null,
       message: "Error updating cart",
+      success: false,
+      error: {
+        message: "Internal server error",
+      },
+    };
+
+    return res.status(500).json(response);
+  }
+};
+
+export const deleteCartItems = async (req: Request, res: Response) => {
+  const productId = Number(req.params.productId);
+
+  if (Number.isNaN(productId)) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Please provide a valid cart item id",
+      success: false,
+    };
+
+    return res.status(400).json(response);
+  }
+  try {
+    const user = req.user!;
+
+    const cart = await prisma.cart.findUnique({
+      where: {
+        userId: user.id,
+      },
+    });
+
+    if (!cart) {
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "Cart not found",
+        success: false,
+      };
+
+      return res.status(404).json(response);
+    }
+
+    if (user.id !== cart.userId) {
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "You not authorised to update this cart",
+        success: false,
+      };
+
+      return res.status(403).json(response);
+    }
+
+    await prisma.cartItem.delete({
+      where: {
+        cartId_productId: {
+          cartId: cart.id,
+          productId: productId,
+        },
+      },
+    });
+
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Item removed from cart successfully",
+      success: false,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Error deleting item from cart",
+      success: false,
+      error: {
+        message: "Internal server error",
+      },
+    };
+
+    return res.status(500).json(response);
+  }
+};
+
+export const clearCart = async (req: Request, res: Response) => {
+  try {
+    const user = req.user!;
+
+    const cart = await prisma.cart.findUnique({
+      where: {
+        userId: user.id,
+      },
+    });
+
+    if (!cart) {
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "Cart not found",
+        success: false,
+      };
+
+      return res.status(404).json(response);
+    }
+
+    if (user.id !== cart.userId) {
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "You not authorised to update this cart",
+        success: false,
+      };
+
+      return res.status(403).json(response);
+    }
+
+    await prisma.cartItem.deleteMany({
+      where: {
+        cartId: cart.id,
+      },
+    });
+
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Cart cleared successfully",
+      success: true,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Error clearing cart",
       success: false,
       error: {
         message: "Internal server error",
