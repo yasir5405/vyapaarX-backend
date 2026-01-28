@@ -74,3 +74,26 @@ export const verifyJwt = async (
     }
   }
 };
+
+export const verifyAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const user = req.user!;
+
+  if (user.role !== "Admin") {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Only admins can perform this action",
+      success: false,
+      error: {
+        message: "Unauthorised",
+      },
+    };
+
+    return res.status(403).json(response);
+  }
+
+  next();
+};

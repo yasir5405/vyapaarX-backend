@@ -9,3 +9,7 @@ export type ApiResponse<T> = {
   data: T | null;
   error?: ApiError;
 };
+
+export type PaginatedResponse<T> = ApiResponse<T> & {
+  nextCursor: number | null;
+};

@@ -312,7 +312,7 @@ export const setDefaultAddress = async (req: Request, res: Response) => {
     const response: ApiResponse<null> = {
       data: null,
       message: "Default address updated successfully",
-      success: false,
+      success: true,
     };
 
     return res.status(200).json(response);
