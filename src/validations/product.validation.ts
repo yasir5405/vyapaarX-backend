@@ -12,3 +12,9 @@ export const productValidationSchema = z.object({
     .optional(),
   price: z.number({ error: "Price of the product is required" }),
 });
+
+export const updateProductValidationSchema = productValidationSchema.partial();
+
+export const searchProductByIdValidation = z.object({
+  productId: z.coerce.number({ error: "Product id is required" }),
+});
