@@ -6,6 +6,7 @@ import { authRouter } from "./routes/auth.route";
 import { addressRouter } from "./routes/address.route";
 import { productRouter } from "./routes/product.route";
 import { cartRouter } from "./routes/cart.route";
+import { orderRouter } from "./routes/order.route";
 
 const app = express();
 
@@ -22,7 +23,8 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/addresses", addressRouter);
-app.use("/api/product", productRouter);
+app.use("/api/products", productRouter);
 app.use("/api/cart", cartRouter);
+app.use("/api/orders", orderRouter);
 
 export default app;
