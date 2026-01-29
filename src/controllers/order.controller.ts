@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
 import { ApiResponse } from "../schemas/common.response";
 import { prisma } from "../lib/prisma";
-import { orderValidationSchema } from "../validations/order.validation";
+import {
+  orderDetailsValidationSchema,
+  orderValidationSchema,
+} from "../validations/order.validation";
 
 export const addOrder = async (req: Request, res: Response) => {
   const parsedBody = orderValidationSchema.safeParse(req.body);
@@ -142,6 +145,152 @@ export const addOrder = async (req: Request, res: Response) => {
     const response: ApiResponse<null> = {
       data: null,
       message: "Error while placing order. Please try again",
+      success: false,
+      error: {
+        message: "Internal server error",
+      },
+    };
+
+    return res.status(500).json(response);
+  }
+};
+
+export const getOrders = async (req: Request, res: Response) => {
+  try {
+    const user = req.user!;
+
+    const orders = await prisma.order.findMany({
+      where: {
+        userId: user.id,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    const response: ApiResponse<typeof orders> = {
+      data: orders,
+      message: "Orders fetched successfully",
+      success: true,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Error in getting orders. Please try again",
+      success: false,
+      error: {
+        message: "Internal server error",
+      },
+    };
+
+    return res.status(500).json(response);
+  }
+};
+
+export const getOrder = async (req: Request, res: Response) => {
+  const parsedBody = orderDetailsValidationSchema.safeParse(req.params);
+
+  if (!parsedBody.success) {
+    const respose: ApiResponse<null> = {
+      data: null,
+      message: "Invalid data format",
+      success: false,
+      error: {
+        message: parsedBody.error.issues[0].message,
+      },
+    };
+
+    return res.status(400).json(respose);
+  }
+
+  const { orderId } = parsedBody.data;
+
+  try {
+    const user = req.user!;
+
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        userId: user.id,
+      },
+      include: {
+        orderItems: true,
+      },
+    });
+
+    if (!order) {
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "Order does not exist",
+        success: false,
+      };
+
+      return res.status(404).json(response);
+    }
+
+    const response: ApiResponse<typeof order> = {
+      data: order,
+      message: "Order details fetched successfully",
+      success: true,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Error in getting orders. Please try again",
+      success: false,
+      error: {
+        message: "Internal server error",
+      },
+    };
+
+    return res.status(500).json(response);
+  }
+};
+
+export const getAllOrders = async (req: Request, res: Response) => {
+  try {
+    const [orders, totalOrders] = await prisma.$transaction([
+      prisma.order.findMany({
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+      prisma.order.count(),
+    ]);
+
+    const responseBody = {
+      totalOrders,
+      orders,
+    };
+
+    if (orders.length === 0) {
+      const response: ApiResponse<typeof responseBody> = {
+        data: {
+          orders: [],
+          totalOrders: 0,
+        },
+        message: "No orders found",
+        success: false,
+      };
+
+      return res.status(404).json(response);
+    }
+
+    const response: ApiResponse<typeof responseBody> = {
+      data: responseBody,
+      message: "Orders fertched successfully",
+      success: true,
+    };
+
+    return res.status(200).json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Error in getting orders. Please try again",
       success: false,
       error: {
         message: "Internal server error",
