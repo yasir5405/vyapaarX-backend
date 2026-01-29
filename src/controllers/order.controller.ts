@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma";
 import {
   orderDetailsValidationSchema,
   orderValidationSchema,
+  updateOrderStatusValidationSchema,
 } from "../validations/order.validation";
 
 export const addOrder = async (req: Request, res: Response) => {
@@ -240,7 +241,7 @@ export const getOrder = async (req: Request, res: Response) => {
   } catch (error) {
     const response: ApiResponse<null> = {
       data: null,
-      message: "Error in getting orders. Please try again",
+      message: "Error in getting order. Please try again",
       success: false,
       error: {
         message: "Internal server error",
@@ -287,6 +288,83 @@ export const getAllOrders = async (req: Request, res: Response) => {
     };
 
     return res.status(200).json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Error in getting orders. Please try again",
+      success: false,
+      error: {
+        message: "Internal server error",
+      },
+    };
+
+    return res.status(500).json(response);
+  }
+};
+
+export const updateOrderStatus = async (req: Request, res: Response) => {
+  const orderId = Number(req.params.orderId);
+
+  if (Number.isNaN(orderId)) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Order id must be valid",
+      success: false,
+    };
+
+    return res.status(400).json(response);
+  }
+
+  const parsedBody = updateOrderStatusValidationSchema.safeParse(req.body);
+
+  if (!parsedBody.success) {
+    const respose: ApiResponse<null> = {
+      data: null,
+      message: "Invalid data format",
+      success: false,
+      error: {
+        message: parsedBody.error.issues[0].message,
+      },
+    };
+
+    return res.status(400).json(respose);
+  }
+
+  const { status } = parsedBody.data;
+
+  try {
+    const order = await prisma.order.findUnique({
+      where: {
+        id: orderId,
+      },
+    });
+
+    if (!order) {
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "Order not found",
+        success: false,
+      };
+
+      return res.status(404).json(response);
+    }
+
+    const updatedOrder = await prisma.order.update({
+      where: {
+        id: orderId,
+      },
+      data: {
+        status: status,
+      },
+    });
+
+    const response: ApiResponse<typeof updatedOrder> = {
+      data: updatedOrder,
+      message: "Order status updated successfully",
+      success: true,
+    };
+
+    res.status(200).json(response);
   } catch (error) {
     const response: ApiResponse<null> = {
       data: null,
