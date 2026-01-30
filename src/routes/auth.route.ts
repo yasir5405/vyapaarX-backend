@@ -17,7 +17,7 @@ authRouter.post("/login", loginUser); //done
 authRouter.get("/me", verifyJwt, getUserDetails); //done
 authRouter.get("/refresh-token", refreshToken); //done
 authRouter.get("/logout", logout); //done
-authRouter.post("/forgot-password", resetPasswordLink);
-authRouter.post("/reset-password", resetPassword);
+authRouter.post("/forgot-password", resetPasswordLink); //done
+authRouter.post("/reset-password", resetPassword); //done
 
 export { authRouter };

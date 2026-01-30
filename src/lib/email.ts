@@ -9,7 +9,8 @@ export const sendResetPasswordLink = async (email: string, token: string) => {
     },
   });
 
-  const link = `http://localhost:${process.env.PORT}/api/auth/reset-password?token=${token}`;
+  // const link = `http://localhost:${process.env.PORT}/api/auth/reset-password?token=${token}`;
+  const link = `${process.env.FRONT_END_URL}/reset-password?token=${token}`;
 
   await transporter.sendMail({
     from: `VyapaarX ${process.env.EMAIL_USER}`,
