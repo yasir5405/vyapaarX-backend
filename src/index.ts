@@ -12,7 +12,12 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONT_END_URL,
+    credentials: true,
+  }),
+);
 app.use(helmet());
 
 app.get("/", (req, res) => {

@@ -118,7 +118,7 @@ export const loginUser = async (req: Request, res: Response) => {
         id: user.id,
       },
       process.env.JWT_ACCESS_SECRET!,
-      { expiresIn: "1d" },
+      { expiresIn: "1m" },
     );
 
     const refreshToken = jwt.sign(
@@ -223,7 +223,7 @@ export const refreshToken = async (req: Request, res: Response) => {
         id: decoded.id,
       },
       process.env.JWT_ACCESS_SECRET!,
-      { expiresIn: "1d" },
+      { expiresIn: "1m" },
     );
 
     const response: ApiResponse<LoginResponse> = {
