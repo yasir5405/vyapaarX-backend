@@ -259,6 +259,15 @@ export const getAllOrders = async (req: Request, res: Response) => {
         orderBy: {
           createdAt: "desc",
         },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+            },
+          },
+        },
       }),
       prisma.order.count(),
     ]);
@@ -369,6 +378,51 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     const response: ApiResponse<null> = {
       data: null,
       message: "Error in getting orders. Please try again",
+      success: false,
+      error: {
+        message: "Internal server error",
+      },
+    };
+
+    return res.status(500).json(response);
+  }
+};
+
+export const getAdminOverview = async (req: Request, res: Response) => {
+  try {
+    const [productCount, orderCount, userCount, revenue] =
+      await prisma.$transaction([
+        prisma.product.count(),
+        prisma.order.count(),
+        prisma.user.count(),
+        prisma.order.aggregate({
+          where: { status: "PAID" },
+          _sum: { totalAmount: true },
+        }),
+      ]);
+
+    type res = {
+      productCount: number;
+      orderCount: number;
+      userCount: number;
+      revenue: number;
+    };
+
+    const response: ApiResponse<res> = {
+      data: {
+        orderCount,
+        productCount,
+        revenue: revenue._sum.totalAmount ?? 0,
+        userCount,
+      },
+      message: "Admin overview fetched successfully",
+      success: true,
+    };
+    return res.status(200).json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Error in getting admin overview. Please try again",
       success: false,
       error: {
         message: "Internal server error",
