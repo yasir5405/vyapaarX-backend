@@ -94,8 +94,10 @@ model CartItem {
 
 model Product {
   id          Int        @id @default(autoincrement())
+  companyName String     @default("")
   name        String
   description String?
+  highlights  Json?
   price       Int
   image       String?
   isActive    Boolean    @default(true)

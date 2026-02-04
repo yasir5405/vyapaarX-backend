@@ -11,6 +11,16 @@ export const productValidationSchema = z.object({
     .max(2000, { error: "Description must not exceed 2000 characters" })
     .optional(),
   price: z.number({ error: "Price of the product is required" }),
+  companyName: z
+    .string({ error: "Company name is required" })
+    .min(3, { error: "Company name should be at least 3 characters long" })
+    .max(150, { error: "Company name should be less than 150 characters" }),
+  highlights: z.array(
+    z
+      .string({ error: "Highlight is required" })
+      .min(3, { error: "Highlight should be at least 3 characters long" })
+      .max(150, { error: "Highlight should be less than 150 characters" }),
+  ),
 });
 
 export const updateProductValidationSchema = productValidationSchema.partial();

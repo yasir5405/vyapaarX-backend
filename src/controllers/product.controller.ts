@@ -23,7 +23,7 @@ export const addProduct = async (req: Request, res: Response) => {
     return res.status(400).json(response);
   }
 
-  const { name, price, description } = parsedBody.data;
+  const { name, price, description, companyName, highlights } = parsedBody.data;
 
   try {
     const product = await prisma.product.create({
@@ -31,6 +31,8 @@ export const addProduct = async (req: Request, res: Response) => {
         name,
         price,
         description,
+        companyName,
+        highlights,
       },
     });
 
