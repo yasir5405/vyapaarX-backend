@@ -32,4 +32,8 @@ app.use("/api/addresses", addressRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/orders", orderRouter);
 
+// Export for Vercel serverless
 export default app;
+
+// For Vercel
+module.exports = app;
