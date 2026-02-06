@@ -104,6 +104,8 @@ export const addOrder = async (req: Request, res: Response) => {
       totalAmount += item.price * item.quantity;
     }
 
+    totalAmount += 23; //Platform FEE
+
     const order = await prisma.$transaction(async (tx) => {
       const createdOrder = await prisma.order.create({
         data: {

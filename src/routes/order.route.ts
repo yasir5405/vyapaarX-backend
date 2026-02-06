@@ -11,7 +11,7 @@ import {
 
 const orderRouter = Router();
 
-orderRouter.post("/", verifyJwt, addOrder);
+orderRouter.post("/", verifyJwt, addOrder); //done
 orderRouter.get("/", verifyJwt, getOrders);
 orderRouter.get("/admin", verifyJwt, verifyAdmin, getAllOrders);
 orderRouter.get("/admin/overview", verifyJwt, verifyAdmin, getAdminOverview);
