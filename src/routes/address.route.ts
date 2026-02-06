@@ -10,10 +10,10 @@ import {
 
 const addressRouter = Router();
 
-addressRouter.post("/", verifyJwt, addAddress);
-addressRouter.get("/", verifyJwt, getAddresses);
-addressRouter.put("/:id", verifyJwt, updateAddress);
-addressRouter.delete("/:id", verifyJwt, deleteAddress);
-addressRouter.patch("/:id/default", verifyJwt, setDefaultAddress);
+addressRouter.post("/", verifyJwt, addAddress); //done
+addressRouter.get("/", verifyJwt, getAddresses); //done
+addressRouter.put("/:id", verifyJwt, updateAddress); //done
+addressRouter.delete("/:id", verifyJwt, deleteAddress); //done
+addressRouter.patch("/:id/default", verifyJwt, setDefaultAddress); //done
 
 export { addressRouter };
