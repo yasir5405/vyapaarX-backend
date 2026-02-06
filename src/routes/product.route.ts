@@ -9,9 +9,9 @@ import {
 
 const productRouter = Router();
 
-productRouter.post("/", verifyJwt, verifyAdmin, addProduct);
+productRouter.post("/", verifyJwt, verifyAdmin, addProduct); //done
 productRouter.get("/", getProducts); //done
 productRouter.get("/:productId", getProduct); //done
-productRouter.put("/:productId", verifyJwt, verifyAdmin, updateProduct);
+productRouter.put("/:productId", verifyJwt, verifyAdmin, updateProduct); //done
 
 export { productRouter };

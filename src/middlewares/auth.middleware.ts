@@ -50,6 +50,9 @@ export const verifyJwt = async (
       where: {
         id: +userId,
       },
+      include: {
+        addresses: true,
+      },
     });
 
     if (!user) {

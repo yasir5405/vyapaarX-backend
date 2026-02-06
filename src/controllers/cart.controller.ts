@@ -299,7 +299,7 @@ export const deleteCartItems = async (req: Request, res: Response) => {
     const response: ApiResponse<null> = {
       data: null,
       message: "Item removed from cart successfully",
-      success: false,
+      success: true,
     };
 
     res.status(200).json(response);

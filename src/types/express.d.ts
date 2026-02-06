@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { Address, Role } from "@prisma/client";
 
 declare global {
   namespace Express {
@@ -10,6 +10,7 @@ declare global {
         createdAt: Date;
         updatedAt: Date;
         id: number;
+        addresses: Address[];
       };
     }
   }

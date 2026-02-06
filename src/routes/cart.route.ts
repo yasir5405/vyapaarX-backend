@@ -10,10 +10,10 @@ import {
 
 const cartRouter = Router();
 
-cartRouter.post("/", verifyJwt, addToCart);
-cartRouter.get("/", verifyJwt, getCart);
-cartRouter.put("/items/:productId", verifyJwt, updateCartItems);
-cartRouter.delete("/items/:productId", verifyJwt, deleteCartItems);
-cartRouter.delete("/", verifyJwt, clearCart);
+cartRouter.post("/", verifyJwt, addToCart); //done
+cartRouter.get("/", verifyJwt, getCart); //done
+cartRouter.put("/items/:productId", verifyJwt, updateCartItems); //done
+cartRouter.delete("/items/:productId", verifyJwt, deleteCartItems); //done
+cartRouter.delete("/", verifyJwt, clearCart); //done
 
 export { cartRouter };
