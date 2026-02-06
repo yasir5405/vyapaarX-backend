@@ -143,10 +143,13 @@ export const loginUser = async (req: Request, res: Response) => {
       success: true,
     };
 
+    const isProd = process.env.NODE_ENV === "production";
+
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
+      domain: isProd ? ".vercel.app" : undefined,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -267,13 +270,14 @@ export const logout = async (req: Request, res: Response) => {
         revoked: true,
       },
     });
-
+    const isProd = process.env.NODE_ENV === "production";
     res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
+      domain: isProd ? ".vercel.app" : undefined,
       path: "/",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     const response: ApiResponse<null> = {
