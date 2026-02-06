@@ -151,6 +151,7 @@ export const loginUser = async (req: Request, res: Response) => {
       sameSite: isProd ? "none" : "lax",
       domain: isProd ? ".vercel.app" : undefined,
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
     });
 
     res.status(200).json(response);
@@ -209,7 +210,14 @@ export const refreshToken = async (req: Request, res: Response) => {
       storedToken.revoked ||
       storedToken.expiresAt < new Date()
     ) {
-      res.clearCookie("refreshToken");
+      const isProd = process.env.NODE_ENV === "production";
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? "none" : "lax",
+        domain: isProd ? ".vercel.app" : undefined,
+        path: "/",
+      });
 
       const response: ApiResponse<null> = {
         data: null,
@@ -277,7 +285,6 @@ export const logout = async (req: Request, res: Response) => {
       sameSite: isProd ? "none" : "lax",
       domain: isProd ? ".vercel.app" : undefined,
       path: "/",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     const response: ApiResponse<null> = {
