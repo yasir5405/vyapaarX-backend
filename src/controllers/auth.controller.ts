@@ -118,7 +118,7 @@ export const loginUser = async (req: Request, res: Response) => {
         id: user.id,
       },
       process.env.JWT_ACCESS_SECRET!,
-      { expiresIn: "1m" },
+      { expiresIn: "10m" },
     );
 
     const refreshToken = jwt.sign(
@@ -214,7 +214,6 @@ export const refreshToken = async (req: Request, res: Response) => {
         httpOnly: true,
         secure: isProd,
         sameSite: isProd ? "none" : "lax",
-        domain: isProd ? ".vercel.app" : undefined,
         path: "/",
       });
 
@@ -232,7 +231,7 @@ export const refreshToken = async (req: Request, res: Response) => {
         id: decoded.id,
       },
       process.env.JWT_ACCESS_SECRET!,
-      { expiresIn: "1m" },
+      { expiresIn: "10m" },
     );
 
     const response: ApiResponse<LoginResponse> = {
@@ -282,7 +281,6 @@ export const logout = async (req: Request, res: Response) => {
       httpOnly: true,
       secure: isProd,
       sameSite: isProd ? "none" : "lax",
-      domain: isProd ? ".vercel.app" : undefined,
       path: "/",
     });
 

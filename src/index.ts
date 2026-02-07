@@ -10,15 +10,17 @@ import { orderRouter } from "./routes/order.route";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(express.json());
 app.use(cookieParser());
+app.use(helmet());
 app.use(
   cors({
     origin: process.env.FRONT_END_URL,
     credentials: true,
   }),
 );
-app.use(helmet());
 
 app.get("/", (req, res) => {
   res.status(200).json({
