@@ -14,7 +14,7 @@ import {
 const orderRouter = Router();
 
 orderRouter.post("/", verifyJwt, addOrder); //done
-orderRouter.post("/verify-payment", verifyJwt, verifyPayment);
+orderRouter.post("/verify-payment", verifyJwt, verifyPayment); //done
 orderRouter.get("/", verifyJwt, getOrders);
 orderRouter.get("/admin", verifyJwt, verifyAdmin, getAllOrders);
 orderRouter.get("/admin/overview", verifyJwt, verifyAdmin, getAdminOverview);
@@ -23,11 +23,7 @@ orderRouter.patch(
   verifyJwt,
   verifyAdmin,
   updateOrderStatus,
-);
-orderRouter.patch(
-  "/:orderId/cancel",
-  verifyJwt,
-  cancelOrder,
-);
+); //done
+orderRouter.patch("/:orderId/cancel", verifyJwt, cancelOrder); //done
 orderRouter.get("/:orderId", verifyJwt, getOrder);
 export { orderRouter };

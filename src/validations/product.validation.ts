@@ -23,7 +23,11 @@ export const productValidationSchema = z.object({
   ),
 });
 
-export const updateProductValidationSchema = productValidationSchema.partial();
+export const updateProductValidationSchema = productValidationSchema
+  .partial()
+  .extend({
+    isActive: z.boolean().optional(),
+  });
 
 export const searchProductByIdValidation = z.object({
   productId: z.coerce.number({ error: "Product id is required" }),
