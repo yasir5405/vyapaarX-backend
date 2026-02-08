@@ -27,6 +27,7 @@
     "nodemailer": "^7.0.12",
     "nodemon": "^3.1.11",
     "pg": "^8.17.2",
+    "razorpay": "^2.9.6",
     "zod": "^4.3.6"
   },
   "devDependencies": {

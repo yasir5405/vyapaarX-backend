@@ -1,11 +1,13 @@
 import { Request, Response } from "express";
 import { ApiResponse } from "../schemas/common.response";
-import { prisma } from "../lib/prisma";
 import {
   orderDetailsValidationSchema,
   orderValidationSchema,
   updateOrderStatusValidationSchema,
 } from "../validations/order.validation";
+import { razorpay } from "../lib/razorpay";
+import { prisma } from "../lib/prisma";
+import crypto from "crypto";
 
 export const addOrder = async (req: Request, res: Response) => {
   const parsedBody = orderValidationSchema.safeParse(req.body);
@@ -24,9 +26,9 @@ export const addOrder = async (req: Request, res: Response) => {
   }
 
   const { addressId } = parsedBody.data;
-  try {
-    const user = req.user!;
+  const user = req.user!;
 
+  try {
     const cart = await prisma.cart.findUnique({
       where: {
         userId: user.id,
@@ -106,17 +108,25 @@ export const addOrder = async (req: Request, res: Response) => {
 
     totalAmount += 23; //Platform FEE
 
+    const razorpayOrder = await razorpay.orders.create({
+      amount: totalAmount * 100,
+      currency: "INR",
+      receipt: `order_${Date.now()}`,
+    });
+
     const order = await prisma.$transaction(async (tx) => {
-      const createdOrder = await prisma.order.create({
+      const createdOrder = await tx.order.create({
         data: {
           userId: user.id,
           totalAmount,
           addressId: addressId,
           addressSnapShot: addressSnapshot,
+          status: "PENDING",
+          razorpayOrderId: razorpayOrder.id,
         },
       });
 
-      const orderItemsData = cart.cartItems.map((item) => ({
+      const items = cart.cartItems.map((item) => ({
         orderId: createdOrder.id,
         productId: item.productId,
         productName: item.product.name,
@@ -125,21 +135,27 @@ export const addOrder = async (req: Request, res: Response) => {
       }));
 
       await tx.orderItems.createMany({
-        data: orderItemsData,
-      });
-
-      await tx.cartItem.deleteMany({
-        where: {
-          cartId: cart.id,
-        },
+        data: items,
       });
 
       return createdOrder;
     });
 
-    const response: ApiResponse<typeof order> = {
-      data: order,
-      message: "Order successfully placed",
+    type OrderResponseType = {
+      orderId: number;
+      razorpayOrderId: string;
+      amount: number | string;
+      currency: string;
+    };
+
+    const response: ApiResponse<OrderResponseType> = {
+      data: {
+        orderId: order.id,
+        razorpayOrderId: razorpayOrder.id,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+      },
+      message: "Order created. Proceed to payment.",
       success: true,
     };
 
@@ -147,7 +163,83 @@ export const addOrder = async (req: Request, res: Response) => {
   } catch (error) {
     const response: ApiResponse<null> = {
       data: null,
-      message: "Error while placing order. Please try again",
+      message: "Error while creating order. Please try again",
+      success: false,
+      error: {
+        message: "Internal server error",
+      },
+    };
+
+    return res.status(500).json(response);
+  }
+};
+
+export const verifyPayment = async (req: Request, res: Response) => {
+  const user = req.user!;
+
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+    req.body;
+
+  try {
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
+      .update(body)
+      .digest("hex");
+
+    if (expectedSignature !== razorpay_signature) {
+      await prisma.order.update({
+        where: {
+          razorpayOrderId: razorpay_order_id,
+        },
+        data: {
+          status: "FAILED",
+        },
+      });
+
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "Payment verification failed",
+        success: false,
+        error: {
+          message: "Payment verification failed",
+        },
+      };
+
+      return res.status(400).json(response);
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: {
+          razorpayOrderId: razorpay_order_id,
+        },
+        data: {
+          status: "PAID",
+          razorpayPaymentId: razorpay_payment_id,
+          razorpaySignature: razorpay_signature,
+        },
+      });
+
+      await tx.cartItem.deleteMany({
+        where: {
+          cart: { userId: user.id },
+        },
+      });
+    });
+
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Payment verified. Order confirmed",
+      success: true,
+    };
+
+    return res.status(200).json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Error during payment verification. Please try again",
       success: false,
       error: {
         message: "Internal server error",
@@ -425,6 +517,75 @@ export const getAdminOverview = async (req: Request, res: Response) => {
     const response: ApiResponse<null> = {
       data: null,
       message: "Error in getting admin overview. Please try again",
+      success: false,
+      error: {
+        message: "Internal server error",
+      },
+    };
+
+    return res.status(500).json(response);
+  }
+};
+
+export const cancelOrder = async (req: Request, res: Response) => {
+  const orderId = Number(req.params.orderId);
+
+  if (Number.isNaN(orderId)) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Order id must be valid",
+      success: false,
+    };
+
+    return res.status(400).json(response);
+  }
+
+  const userId = req.user!.id;
+
+  try {
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        userId,
+      },
+    });
+
+    if (!order) {
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "Order not found",
+        success: false,
+      };
+
+      return res.status(404).json(response);
+    }
+
+    if (order.status !== "PENDING") {
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "Only pending orders can be cancelled",
+        success: false,
+      };
+
+      return res.status(404).json(response);
+    }
+
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { status: "CANCELLED" },
+    });
+
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Order cancelled",
+      success: true,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Error cancelling order. Please try again",
       success: false,
       error: {
         message: "Internal server error",

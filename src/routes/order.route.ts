@@ -2,16 +2,19 @@ import { Router } from "express";
 import { verifyAdmin, verifyJwt } from "../middlewares/auth.middleware";
 import {
   addOrder,
+  cancelOrder,
   getAdminOverview,
   getAllOrders,
   getOrder,
   getOrders,
   updateOrderStatus,
+  verifyPayment,
 } from "../controllers/order.controller";
 
 const orderRouter = Router();
 
 orderRouter.post("/", verifyJwt, addOrder); //done
+orderRouter.post("/verify-payment", verifyJwt, verifyPayment);
 orderRouter.get("/", verifyJwt, getOrders);
 orderRouter.get("/admin", verifyJwt, verifyAdmin, getAllOrders);
 orderRouter.get("/admin/overview", verifyJwt, verifyAdmin, getAdminOverview);
@@ -20,6 +23,11 @@ orderRouter.patch(
   verifyJwt,
   verifyAdmin,
   updateOrderStatus,
+);
+orderRouter.patch(
+  "/:orderId/cancel",
+  verifyJwt,
+  cancelOrder,
 );
 orderRouter.get("/:orderId", verifyJwt, getOrder);
 export { orderRouter };
