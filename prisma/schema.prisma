@@ -79,17 +79,18 @@ model CartItem {
 }
 
 model Product {
-  id          Int        @id @default(autoincrement())
+  id          Int          @id @default(autoincrement())
   name        String
   description String?
   price       Int
-  isActive    Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   image       String?
-  companyName String     @default("")
+  companyName String       @default("")
   highlights  Json?
   cartItems   CartItem[]
+  orderItems  OrderItems[]
 }
 
 model Order {
@@ -117,6 +118,7 @@ model OrderItems {
   quantity    Int
   createdAt   DateTime @default(now())
   order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
 }
 
 enum Role {
