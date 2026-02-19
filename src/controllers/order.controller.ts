@@ -347,6 +347,7 @@ export const getOrder = async (req: Request, res: Response) => {
             product: true,
           },
         },
+        user: true,
       },
     });
 
