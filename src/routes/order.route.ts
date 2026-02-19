@@ -15,8 +15,8 @@ const orderRouter = Router();
 
 orderRouter.post("/", verifyJwt, addOrder); //done
 orderRouter.post("/verify-payment", verifyJwt, verifyPayment); //done
-orderRouter.get("/", verifyJwt, getOrders);
-orderRouter.get("/admin", verifyJwt, verifyAdmin, getAllOrders);
+orderRouter.get("/", verifyJwt, getOrders); //done
+orderRouter.get("/admin", verifyJwt, verifyAdmin, getAllOrders); //done
 orderRouter.get("/admin/overview", verifyJwt, verifyAdmin, getAdminOverview);
 orderRouter.patch(
   "/admin/:orderId/status",
@@ -25,5 +25,5 @@ orderRouter.patch(
   updateOrderStatus,
 ); //done
 orderRouter.patch("/:orderId/cancel", verifyJwt, cancelOrder); //done
-orderRouter.get("/:orderId", verifyJwt, getOrder);
+orderRouter.get("/:orderId", verifyJwt, getOrder); //done
 export { orderRouter };

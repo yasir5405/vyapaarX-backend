@@ -254,25 +254,48 @@ export const getOrders = async (req: Request, res: Response) => {
   try {
     const user = req.user!;
 
-    const orders = await prisma.order.findMany({
-      where: {
-        userId: user.id,
-        status: "PAID",
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      include: {
-        orderItems: {
-          include: {
-            product: true,
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 5;
+
+    const skip = (page - 1) * limit;
+
+    const [orders, totalOrders] = await prisma.$transaction([
+      prisma.order.findMany({
+        where: {
+          userId: user.id,
+          status: "PAID",
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        skip,
+        take: limit,
+        include: {
+          orderItems: {
+            include: {
+              product: true,
+            },
           },
         },
-      },
-    });
+      }),
 
-    const response: ApiResponse<typeof orders> = {
-      data: orders,
+      prisma.order.count({
+        where: {
+          userId: user.id,
+          status: "PAID",
+        },
+      }),
+    ]);
+
+    const responseType = {
+      orders: orders,
+      totalOrders: totalOrders,
+      totalPages: Math.ceil(totalOrders / limit),
+      currentPage: page,
+    };
+
+    const response: ApiResponse<typeof responseType> = {
+      data: responseType,
       message: "Orders fetched successfully",
       success: true,
     };
