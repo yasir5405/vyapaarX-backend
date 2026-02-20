@@ -485,6 +485,16 @@ export const editUser = async (req: Request, res: Response) => {
     return res.status(400).json(response);
   }
 
+  if (Object.keys(parsedBody.data).length === 0) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "No fields provided to update",
+      success: false,
+    };
+
+    return res.status(400).json(response);
+  }
+
   try {
     const user = req.user!;
 
@@ -501,7 +511,7 @@ export const editUser = async (req: Request, res: Response) => {
       success: true,
     };
 
-    res.status(201).json(response);
+    res.status(200).json(response);
   } catch (error: any) {
     if (error.code === "P2002") {
       const response: ApiResponse<null> = {
