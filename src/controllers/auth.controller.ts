@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { ApiResponse } from "../schemas/common.response";
 import {
+  editUserValidationSchema,
   loginValidation,
   registerValidationSchema,
   resetPasswordValidation,
@@ -461,6 +462,60 @@ export const resetPassword = async (req: Request, res: Response) => {
     const response: ApiResponse<null> = {
       data: null,
       message: "Password could not reset successfully. Please try again later.",
+      success: false,
+      error: { message: "Internal server error." },
+    };
+    return res.status(500).json(response);
+  }
+};
+
+export const editUser = async (req: Request, res: Response) => {
+  const parsedBody = editUserValidationSchema.safeParse(req.body);
+
+  if (!parsedBody.success) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Invalid data format",
+      success: false,
+      error: {
+        message: parsedBody.error.issues[0].message,
+      },
+    };
+
+    return res.status(400).json(response);
+  }
+
+  try {
+    const user = req.user!;
+
+    await prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: parsedBody.data,
+    });
+
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Profile details updated successfully",
+      success: true,
+    };
+
+    res.status(201).json(response);
+  } catch (error: any) {
+    if (error.code === "P2002") {
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "Email already exists",
+        success: false,
+        error: { message: "Email already exists." },
+      };
+      return res.status(409).json(response);
+    }
+    const response: ApiResponse<null> = {
+      data: null,
+      message:
+        "Profile could not be updated successfully. Please try again later.",
       success: false,
       error: { message: "Internal server error." },
     };

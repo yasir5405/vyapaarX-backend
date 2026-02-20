@@ -24,4 +24,13 @@ const resetPasswordValidation = z.object({
   email: z.email({ error: "Please enter a valid email." }),
 });
 
-export { registerValidationSchema, loginValidation, resetPasswordValidation };
+const editUserValidationSchema = registerValidationSchema
+  .omit({ password: true })
+  .partial();
+
+export {
+  registerValidationSchema,
+  loginValidation,
+  resetPasswordValidation,
+  editUserValidationSchema,
+};
