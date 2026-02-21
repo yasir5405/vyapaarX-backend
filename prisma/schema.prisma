@@ -92,8 +92,8 @@ model Product {
   cartItems   CartItem[]
   orderItems  OrderItems[]
 
-  categoryId Int?
-  category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
 }
 
 model Category {
@@ -107,7 +107,7 @@ model Category {
   isActive Boolean @default(true)
 
   createdAt DateTime @default(now())
-  updatedat DateTime @updatedAt
+  updatedAt DateTime @updatedAt @default(now())
 
   products Product[]
 }

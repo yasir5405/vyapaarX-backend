@@ -23,7 +23,8 @@ export const addProduct = async (req: Request, res: Response) => {
     return res.status(400).json(response);
   }
 
-  const { name, price, description, companyName, highlights } = parsedBody.data;
+  const { name, price, description, companyName, highlights, categoryId } =
+    parsedBody.data;
 
   try {
     const product = await prisma.product.create({
@@ -33,6 +34,7 @@ export const addProduct = async (req: Request, res: Response) => {
         description,
         companyName,
         highlights,
+        categoryId,
       },
     });
 
@@ -85,6 +87,9 @@ export const getProducts = async (req: Request, res: Response) => {
       where: {
         isActive: true,
       },
+      include: {
+        category: true,
+      },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     });
 
@@ -134,6 +139,9 @@ export const getProduct = async (req: Request, res: Response) => {
     const product = await prisma.product.findUnique({
       where: {
         id: productId,
+      },
+      include: {
+        category: true,
       },
     });
 
@@ -239,6 +247,63 @@ export const updateProduct = async (req: Request, res: Response) => {
     const response: ApiResponse<null> = {
       data: null,
       message: "Error fetching product. Please try again",
+      success: false,
+      error: {
+        message: "Internal server error",
+      },
+    };
+    return res.status(500).json(response);
+  }
+};
+
+export const getHomeProducts = async (req: Request, res: Response) => {
+  try {
+    const [categories, newArrivals, menProducts, womenProducts] =
+      await Promise.all([
+        prisma.category.findMany({
+          where: { isActive: true },
+          orderBy: { id: "desc" },
+          take: 6,
+        }),
+
+        prisma.product.findMany({
+          where: { isActive: true },
+          orderBy: { createdAt: "desc" },
+          take: 8,
+          include: { category: true },
+        }),
+
+        prisma.product.findMany({
+          where: { isActive: true, category: { slug: "men" } },
+          take: 8,
+          include: { category: true },
+        }),
+
+        prisma.product.findMany({
+          where: { isActive: true, category: { slug: "women" } },
+          take: 8,
+          include: { category: true },
+        }),
+      ]);
+
+    const responseType = {
+      categories,
+      newArrivals,
+      menProducts,
+      womenProducts,
+    };
+
+    const response: ApiResponse<typeof responseType> = {
+      data: responseType,
+      message: "Homepage products fetched successfully",
+      success: true,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Error fetching homepage data. Please try again",
       success: false,
       error: {
         message: "Internal server error",
