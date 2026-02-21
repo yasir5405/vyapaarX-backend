@@ -91,6 +91,25 @@ model Product {
   highlights  Json?
   cartItems   CartItem[]
   orderItems  OrderItems[]
+
+  categoryId Int?
+  category   Category? @relation(fields: [categoryId], references: [id])
+}
+
+model Category {
+  id Int @id @default(autoincrement())
+
+  name        String  @unique
+  slug        String  @unique
+  description String?
+
+  image    String?
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedat DateTime @updatedAt
+
+  products Product[]
 }
 
 model Order {
