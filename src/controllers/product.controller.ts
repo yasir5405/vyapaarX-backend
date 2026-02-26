@@ -6,6 +6,7 @@ import {
   searchProductByIdValidation,
   updateProductValidationSchema,
 } from "../validations/product.validation";
+import slugify from "slugify";
 
 export const addProduct = async (req: Request, res: Response) => {
   const parsedBody = productValidationSchema.safeParse(req.body);
@@ -27,6 +28,24 @@ export const addProduct = async (req: Request, res: Response) => {
     parsedBody.data;
 
   try {
+    let baseSlug = slugify(name, {
+      lower: true,
+      strict: true,
+    });
+
+    let slug = baseSlug;
+    let count = 1;
+
+    while (true) {
+      const existing = await prisma.product.findUnique({
+        where: { slug },
+      });
+
+      if (!existing) break;
+
+      slug = `${baseSlug}-${count}`;
+      count++;
+    }
     const product = await prisma.product.create({
       data: {
         name,
@@ -35,6 +54,7 @@ export const addProduct = async (req: Request, res: Response) => {
         companyName,
         highlights,
         categoryId,
+        slug,
       },
     });
 
