@@ -33,3 +33,7 @@ export const updateProductValidationSchema = productValidationSchema
 export const searchProductByIdValidation = z.object({
   productId: z.coerce.number({ error: "Product id is required" }),
 });
+
+export const getProductBySlugValidation = z.object({
+  slug: z.string({ error: "Product slug must be provided" }),
+});

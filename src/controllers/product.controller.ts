@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { ApiResponse, PaginatedResponse } from "../schemas/common.response";
 import {
+  getProductBySlugValidation,
   productValidationSchema,
   searchProductByIdValidation,
   updateProductValidationSchema,
@@ -160,6 +161,62 @@ export const getProduct = async (req: Request, res: Response) => {
       where: {
         id: productId,
       },
+      include: {
+        category: true,
+      },
+    });
+
+    if (!product) {
+      const response: ApiResponse<null> = {
+        data: null,
+        message: "Product not found",
+        success: false,
+      };
+
+      return res.status(404).json(response);
+    }
+
+    const response: ApiResponse<typeof product> = {
+      data: product,
+      message: "Product fetched successfully",
+      success: true,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Error fetching product. Please try again",
+      success: false,
+      error: {
+        message: "Internal server error",
+      },
+    };
+    return res.status(500).json(response);
+  }
+};
+
+export const getProductBySlug = async (req: Request, res: Response) => {
+  const parsedBody = getProductBySlugValidation.safeParse(req.params);
+
+  if (!parsedBody.success) {
+    const response: ApiResponse<null> = {
+      data: null,
+      message: "Invalid data format",
+      success: false,
+      error: {
+        message: parsedBody.error.issues[0].message,
+      },
+    };
+
+    return res.status(400).json(response);
+  }
+
+  const { slug } = parsedBody.data;
+
+  try {
+    const product = await prisma.product.findUnique({
+      where: { slug },
       include: {
         category: true,
       },
